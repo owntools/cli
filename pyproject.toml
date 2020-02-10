@@ -7,6 +7,7 @@ authors = ["smoll"]
 [tool.poetry.dependencies]
 python = "^3.6"
 questionary = "^1.5.1"
+shell = { git = "https://github.com/toastdriven/shell.git", rev = "58625cd" }
 
 [tool.poetry.dev-dependencies]
 

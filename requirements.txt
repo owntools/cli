@@ -1,3 +1,4 @@
 prompt-toolkit==3.0.3
 questionary==1.5.1
+git+https://github.com/toastdriven/shell.git@58625cdbf63b0683885f433a5af2534d3bad74e9#egg=shell
 wcwidth==0.1.8
