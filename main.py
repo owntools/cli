@@ -1,8 +1,8 @@
 import argparse
 import os
+import subprocess
 import questionary as q
 from prompt_toolkit.styles import Style
-from shell import shell
 
 INIT_BOILERPLATE = "INIT_BOILERPLATE"
 NEW_CHALLENGE = "NEW_CHALLENGE"
@@ -14,11 +14,90 @@ LANGS = ['nodejs', 'python2', 'python3']
 SPAS = ['react-app']
 
 
-def run_cmd(cmd, dry_run, **kwargs):
+class CommandError(Exception):
+    pass
+
+
+class Shell:
+    def __init__(self, cmd, cwd=None, die=False, verbose=False):
+        self.cmd = cmd
+        self.cwd = cwd
+        self.die = die
+        self.verbose = verbose
+
+        self.rc = None
+        self.out = None
+        self.err = None
+
+    def exec(self):
+        pipes = subprocess.Popen(
+            self.cmd,
+            cwd=self.cwd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        out, err = pipes.communicate()
+        self.rc = pipes.returncode
+        self.out = out
+        self.err = err
+
+        if self.verbose:
+            for l in self.output():
+                print(l)
+            for l in self.errors():
+                print(l)
+
+        if self.die and self.rc != 0:
+            raise CommandError(self.get_last_err())
+
+    def output(self):
+        return self.out.decode('utf-8').splitlines()
+
+    def errors(self):
+        return self.err.decode('utf-8').splitlines()
+
+    def get_last_err(self):
+        last_err = 'exit code non-zero'
+        for line in self.errors():
+            clean_line = line.strip()
+            if clean_line:
+                last_err = clean_line
+
+        return last_err
+
+
+def run_cmd(cmd, dry_run=False, **kwargs):
     if dry_run:
         return print(cmd)
 
-    return shell(cmd, **kwargs)
+    sh = Shell(cmd, **kwargs)
+    sh.exec()
+    return sh
+
+
+def validate_bp_dir(init_boilerplate):
+    ls = run_cmd(f'ls {BOILERPLATE_DIR}')
+    boilerplate_dirs = list(ls.output())
+
+    if boilerplate_dirs:
+        # pull latest
+        run_cmd('git fetch', cwd=BOILERPLATE_DIR, die=True)
+        head_sha = run_cmd('git rev-parse HEAD', cwd=BOILERPLATE_DIR, die=True).output()[-1]
+        current_sha = run_cmd('git rev-parse @{u}', cwd=BOILERPLATE_DIR, die=True).output()[-1]
+        if head_sha != current_sha:
+            run_cmd('git pull', cwd=BOILERPLATE_DIR, die=True)
+    else:
+        # clone fresh
+        try:
+            run_cmd(f'git clone https://github.com/owntools/boilerplate.git {BOILERPLATE_DIR}', die=True)
+        except CommandError:
+            run_cmd(f'git clone git@github.com:owntools/boilerplate.git {BOILERPLATE_DIR}', die=True)
+
+        ls = run_cmd(f'ls {BOILERPLATE_DIR}')
+        boilerplate_dirs = list(ls.output())
+
+    assert init_boilerplate in boilerplate_dirs, f"Sorry, {init_boilerplate} is not a valid boilerplate. See https://github.com/owntools/boilerplate for all available."
 
 
 def main(dry_run):
@@ -67,18 +146,7 @@ def main(dry_run):
         if len(allowed_boilerplates) or confirm_none:
             break
 
-    ls = run_cmd(f'ls {BOILERPLATE_DIR}', dry_run=False)
-    boilerplate_dirs = list(ls.output())
-    if not boilerplate_dirs:
-        try:
-            run_cmd(f'git clone https://github.com/owntools/boilerplate.git {BOILERPLATE_DIR}', dry_run=dry_run, die=True)
-        except Exception:
-            run_cmd(f'git clone git@github.com:owntools/boilerplate.git {BOILERPLATE_DIR}', dry_run=dry_run, die=True)
-
-        ls = run_cmd(f'ls {BOILERPLATE_DIR}', dry_run=False)
-        boilerplate_dirs = list(ls.output())
-
-    assert init_boilerplate in boilerplate_dirs, f"Sorry, {init_boilerplate} is not a valid boilerplate. See https://github.com/owntools/boilerplate for all available."
+    validate_bp_dir(init_boilerplate)
 
     init_tmpl = f"rsync %s --delete --exclude '.git' --exclude 'node_modules' {BOILERPLATE_DIR}/{init_boilerplate}/ {os.getcwd()}"
     init_preview = init_tmpl % '-anv'
@@ -86,7 +154,7 @@ def main(dry_run):
 
     run_cmd(init_preview, dry_run=False, verbose=True, die=True)
     if not dry_run:
-        confirm_init = q.confirm("Continue?", default=False).ask()
+        confirm_init = q.confirm("This will replace all files in current directory with the above files. Continue?", default=False).ask()
         if confirm_init:
             run_cmd(init_real, dry_run=False, verbose=True, die=True)
 
