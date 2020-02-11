@@ -1,21 +1,21 @@
 default: run
 
 run:
-	poetry run python main.py
+	poetry run python cli.py
 
 deps:
 	poetry run pip freeze > requirements.txt
 
 spec:
-	docker run -v "$(PWD):/src/" cdrx/pyinstaller-linux "pyinstaller main.py"
+	docker run -v "$(PWD):/src/" cdrx/pyinstaller-linux "pyinstaller --onefile cli.py"
 
 build:
 	docker run -v "$(PWD):/src/" cdrx/pyinstaller-linux
 
 cp:
-	sudo cp dist/linux/main /usr/local/bin/ot
+	sudo cp dist/linux/cli /usr/local/bin/ot
 
-install: build cp
+install: spec build cp
 
 clean:
 	sudo rm -rf build

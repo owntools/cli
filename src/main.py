@@ -1,84 +1,40 @@
-import argparse
 import os
-import subprocess
 import questionary as q
-from prompt_toolkit.styles import Style
 
+from .shell import Shell
+
+BOILERPLATE_DIR = os.environ.get('BOILERPLATE_DIR', '/tmp/boilerplate')
 INIT_BOILERPLATE = "INIT_BOILERPLATE"
 NEW_CHALLENGE = "NEW_CHALLENGE"
-OTHER = "OTHER"
-BOILERPLATE_DIR = os.environ.get('BOILERPLATE_DIR', '/tmp/boilerplate')
 
 APIS = ['express-api', 'flask-api']
 LANGS = ['nodejs', 'python2', 'python3']
 SPAS = ['react-app']
 
 
-class CommandError(Exception):
-    pass
-
-
-class Shell:
-    def __init__(self, cmd, cwd=None, die=False, verbose=False):
-        self.cmd = cmd
-        self.cwd = cwd
-        self.die = die
-        self.verbose = verbose
-
-        self.rc = None
-        self.out = None
-        self.err = None
-
-    def exec(self):
-        pipes = subprocess.Popen(
-            self.cmd,
-            cwd=self.cwd,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        out, err = pipes.communicate()
-        self.rc = pipes.returncode
-        self.out = out
-        self.err = err
-
-        if self.verbose:
-            for l in self.output():
-                print(l)
-            for l in self.errors():
-                print(l)
-
-        if self.die and self.rc != 0:
-            raise CommandError(self.get_last_err())
-
-    def output(self):
-        return self.out.decode('utf-8').splitlines()
-
-    def errors(self):
-        return self.err.decode('utf-8').splitlines()
-
-    def get_last_err(self):
-        last_err = 'exit code non-zero'
-        for line in self.errors():
-            clean_line = line.strip()
-            if clean_line:
-                last_err = clean_line
-
-        return last_err
-
-
 def run_cmd(cmd, dry_run=False, **kwargs):
     if dry_run:
         return print(cmd)
 
-    sh = Shell(cmd, **kwargs)
-    sh.exec()
+    sh = Shell(**kwargs)
+    sh.exec(cmd)
     return sh
 
 
+def get_bp_dirs():
+    dirs = []
+    for f in os.scandir(BOILERPLATE_DIR):
+        if str(f.name).startswith('.'):
+            continue
+        if not f.is_dir():
+            continue
+        dirs.append(f.name)
+    return dirs
+
+
 def validate_bp_dir(init_boilerplate):
-    ls = run_cmd(f'ls {BOILERPLATE_DIR}')
-    boilerplate_dirs = list(ls.output())
+    """Git clone/pull latest owntools/boilerplate repo, and ensure boilerplate is in it."""
+    boilerplate_dirs = get_bp_dirs()
 
     if boilerplate_dirs:
         # pull latest
@@ -87,17 +43,35 @@ def validate_bp_dir(init_boilerplate):
         current_sha = run_cmd('git rev-parse @{u}', cwd=BOILERPLATE_DIR, die=True).output()[-1]
         if head_sha != current_sha:
             run_cmd('git pull', cwd=BOILERPLATE_DIR, die=True)
+            boilerplate_dirs = get_bp_dirs()
     else:
         # clone fresh
         try:
             run_cmd(f'git clone https://github.com/owntools/boilerplate.git {BOILERPLATE_DIR}', die=True)
         except CommandError:
             run_cmd(f'git clone git@github.com:owntools/boilerplate.git {BOILERPLATE_DIR}', die=True)
-
-        ls = run_cmd(f'ls {BOILERPLATE_DIR}')
-        boilerplate_dirs = list(ls.output())
+        boilerplate_dirs = get_bp_dirs()
 
     assert init_boilerplate in boilerplate_dirs, f"Sorry, {init_boilerplate} is not a valid boilerplate. See https://github.com/owntools/boilerplate for all available."
+
+
+def sync_bp_dir(init_boilerplate, dry_run):
+    """
+    Copy the requested boilerplate from the owntools/boilerplate repo.
+
+    Show the files that would be added/deleted, and prompt user for confirmation.
+    """
+    init_tmpl = f"rsync %s --delete --exclude '.git' --exclude 'node_modules' {BOILERPLATE_DIR}/{init_boilerplate}/ {os.getcwd()}"
+    init_preview = init_tmpl % '-anv'
+    init_real = init_tmpl % '-av'
+
+    run_cmd(init_preview, dry_run=False, verbose=True, die=True)
+    if dry_run:
+        run_cmd(init_real, dry_run=True, verbose=True, die=True)
+    else:
+        confirm_init = q.confirm("This will replace all files in current directory with the above files. Continue?", default=False).ask()
+        if confirm_init:
+            run_cmd(init_real, dry_run=False, verbose=True, die=True)
 
 
 def main(dry_run):
@@ -147,23 +121,4 @@ def main(dry_run):
             break
 
     validate_bp_dir(init_boilerplate)
-
-    init_tmpl = f"rsync %s --delete --exclude '.git' --exclude 'node_modules' {BOILERPLATE_DIR}/{init_boilerplate}/ {os.getcwd()}"
-    init_preview = init_tmpl % '-anv'
-    init_real = init_tmpl % '-av'
-
-    run_cmd(init_preview, dry_run=False, verbose=True, die=True)
-    if not dry_run:
-        confirm_init = q.confirm("This will replace all files in current directory with the above files. Continue?", default=False).ask()
-        if confirm_init:
-            run_cmd(init_real, dry_run=False, verbose=True, die=True)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Run the owntools CLI to create/solve programming challenges with your own tools.')
-    parser.add_argument('--dry-run', dest='dry_run', action='store_true')
-    parser.add_argument('--real', dest='dry_run', action='store_false')
-    parser.set_defaults(dry_run=False)
-    args = parser.parse_args()
-
-    main(args.dry_run)
+    sync_bp_dir(init_boilerplate, dry_run)
