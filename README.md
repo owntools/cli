@@ -1,6 +1,6 @@
-### what
+# CLI
 
-This CLI has a dual purpose:
+Is used
 
 1. As an evaluator, to design new coding challenges. Initialize it in a new directory and it will ask for:
     1. the boilerplate (e.g. `flask-api`) you want to use to design it
