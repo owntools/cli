@@ -23,12 +23,15 @@ def run_cmd(cmd, dry_run=False, **kwargs):
 
 def get_bp_dirs():
     dirs = []
-    for f in os.scandir(BOILERPLATE_DIR):
-        if str(f.name).startswith('.'):
-            continue
-        if not f.is_dir():
-            continue
-        dirs.append(f.name)
+    try:
+        for f in os.scandir(BOILERPLATE_DIR):
+            if str(f.name).startswith('.'):
+                continue
+            if not f.is_dir():
+                continue
+            dirs.append(f.name)
+    except FileNotFoundError:
+        pass
     return dirs
 
 
@@ -61,7 +64,7 @@ def sync_bp_dir(init_boilerplate, dry_run):
 
     Show the files that would be added/deleted, and prompt user for confirmation.
     """
-    init_tmpl = f"rsync %s --delete --exclude '.git' --exclude 'node_modules' {BOILERPLATE_DIR}/{init_boilerplate}/ {os.getcwd()}"
+    init_tmpl = f"rsync %s --delete --exclude '.git' --exclude 'node_modules' --exclude '__owntools__' {BOILERPLATE_DIR}/{init_boilerplate}/ {os.getcwd()}"
     init_preview = init_tmpl % '-anv'
     init_real = init_tmpl % '-av'
 
