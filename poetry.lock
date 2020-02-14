@@ -25,14 +25,6 @@ test = ["pytest (>=4.0,<5.0)", "pytest-pycodestyle (>=1.3,<2.0)", "pytest-cov (>
 
 [[package]]
 category = "main"
-description = "A better way to run shell commands in Python."
-name = "shell"
-optional = false
-python-versions = "*"
-version = "1.0.1"
-
-[[package]]
-category = "main"
 description = "Measures number of Terminal column cells of wide-character codes"
 name = "wcwidth"
 optional = false
@@ -40,7 +32,7 @@ python-versions = "*"
 version = "0.1.8"
 
 [metadata]
-content-hash = "ee0137994b15aae259573e9e7e1f1659bc4ca5219a3f3353ec9ac19a7e1f8bb9"
+content-hash = "4fa9f912a2ab0c63260b5ed4a3849342080bf8f8e656ea66fd2f8bb5dd36dfd1"
 python-versions = "^3.6"
 
 [metadata.files]
@@ -51,10 +43,6 @@ prompt-toolkit = [
 questionary = [
     {file = "questionary-1.5.1-py3-none-any.whl", hash = "sha256:5314bfb746321997a9dc457e5e0a533e577a661347f3a89c63277c6746e9a8b9"},
     {file = "questionary-1.5.1.tar.gz", hash = "sha256:f199d4a780183679725f10a209b68be27f07cfd2852d6d7ea9e4a31fb45fb0c0"},
-]
-shell = [
-    {file = "shell-1.0.1-py2.py3-none-any.whl", hash = "sha256:64e3347d1dd2c8f3c3f3df5e6ebe9084d768ae20985aef6793854b9f47d4045a"},
-    {file = "shell-1.0.1.tar.gz", hash = "sha256:6fbaa88f85de228ddecef33cb1e9037f4959f6f76942b01769e4139a038f6513"},
 ]
 wcwidth = [
     {file = "wcwidth-0.1.8-py2.py3-none-any.whl", hash = "sha256:8fd29383f539be45b20bd4df0dc29c20ba48654a41e661925e612311e9f3c603"},
