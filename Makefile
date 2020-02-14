@@ -19,6 +19,7 @@ setup:
 mac:
 	# pyinstaller --onefile cli.py
 	pyinstaller --clean -y --dist ./dist/mac --workpath /tmp *.spec
+	cp dist/mac/cli /usr/local/bin/ot
 
 cp:
 	sudo cp dist/linux/cli /usr/local/bin/ot
