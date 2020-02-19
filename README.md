@@ -1,6 +1,6 @@
 # CLI
 
-Run `ot` to seamlessly switch between boilerplates for solving coding challenges.
+Run `ot` to seamlessly switch between {API, SPA, fullstack} boilerplates for solving coding challenges.
 
 ![usage](https://user-images.githubusercontent.com/60677320/74804860-768e1980-52af-11ea-8028-edf9988010e7.gif)
 
