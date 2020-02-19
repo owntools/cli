@@ -31,6 +31,7 @@ def validate_bp_dir(init_boilerplate):
 
     if boilerplate_dirs:
         # pull latest
+        run_cmd('git reset --hard origin/master', cwd=BOILERPLATE_DIR, die=True)
         run_cmd('git fetch', cwd=BOILERPLATE_DIR, die=True)
         head_sha = run_cmd('git rev-parse HEAD', cwd=BOILERPLATE_DIR, die=True).output()[-1]
         current_sha = run_cmd('git rev-parse @{u}', cwd=BOILERPLATE_DIR, die=True).output()[-1]
