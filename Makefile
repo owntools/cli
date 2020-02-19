@@ -7,10 +7,10 @@ deps:
 	poetry run pip freeze > requirements.txt
 
 spec:
-	docker run -v "$(PWD):/src/" cdrx/pyinstaller-linux "pyinstaller --onefile cli.py"
+	docker run --rm -it -v "$(PWD):/src/" cdrx/pyinstaller-linux "pyinstaller --onefile cli.py"
 
 build:
-	docker run -v "$(PWD):/src/" cdrx/pyinstaller-linux
+	docker run --rm -it -v "$(PWD):/src/" cdrx/pyinstaller-linux
 
 setup:
 	env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.6.10
