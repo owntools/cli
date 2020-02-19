@@ -1,4 +1,7 @@
-import subprocess
+import os
+import sys
+from select import select
+from subprocess import Popen, PIPE
 
 
 class CommandError(Exception):
@@ -11,43 +14,41 @@ class Shell:
         self.die = die
         self.verbose = verbose
 
-        self.rc = None
         self.out = None
-        self.err = None
+
+    def stream_output(self, p):
+        readable = {
+            p.stdout.fileno(): sys.stdout.buffer, # log separately
+            p.stderr.fileno(): sys.stderr.buffer,
+        }
+        while readable:
+            for fd in select(readable, [], [])[0]:
+                data = os.read(fd, 1024) # read available
+                if not data: # EOF
+                    del readable[fd]
+                else:
+                    readable[fd].write(data)
+                    readable[fd].flush()
 
     def exec(self, cmd):
-        pipes = subprocess.Popen(
+        p = Popen(
             cmd,
             cwd=self.cwd,
             shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stdout=PIPE,
+            stderr=PIPE,
         )
-        out, err = pipes.communicate()
-        self.rc = pipes.returncode
-        self.out = out
-        self.err = err
-
         if self.verbose:
-            for l in self.output():
-                print(l)
-            for l in self.errors():
-                print(l)
+            self.stream_output(p)
+            rc = p.poll()
+        else:
+            out, err = p.communicate()
+            self.out = out
+            rc = p.returncode
 
-        if self.die and self.rc != 0:
-            raise CommandError(self.get_last_err())
+        if self.die and rc != 0:
+            raise CommandError('exited non-zero')
 
     def output(self):
+        assert not self.verbose, "Cannot retrieve output if verbose=True!"
         return self.out.decode('utf-8').splitlines()
-
-    def errors(self):
-        return self.err.decode('utf-8').splitlines()
-
-    def get_last_err(self):
-        last_err = 'exit code non-zero'
-        for line in self.errors():
-            clean_line = line.strip()
-            if clean_line:
-                last_err = clean_line
-
-        return last_err

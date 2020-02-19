@@ -1,7 +1,10 @@
 default: run
 
 debug:
-	@echo 'hi' && sleep 2 && >&2 echo 'bye from stderr'
+	@echo 'hi' && sleep 0.1 && >&2 echo 'bye from stderr'
+
+err:
+	@echo 'hi' && sleep 0.1 && >&2 echo 'bye from stderr' && exit 1
 
 run:
 	poetry run python cli.py
