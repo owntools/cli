@@ -19,10 +19,11 @@ if __name__ == '__main__':
         formatter_class=SmartFormatter,
     )
     fmt_opts = ''.join([f"    {k} = {v}\n" for k, v in CLI_COMMANDS.items()])
-    parser.add_argument('command', nargs='?', choices=['help', 'prompt', *CLI_COMMANDS.keys()], default='prompt', help=f"R|Command to execute, where:\n{fmt_opts}")
-         # " a = alpha\n"
-         # " b = beta\n"
-         # " g = gamma\n")
+    parser.add_argument('command', nargs='?', choices=['help', 'prompt', *CLI_COMMANDS.keys()], default='prompt', help=f"R|Command to execute, where:\n"
+         "    help = Show this help text\n"
+         "    prompt* = Prompt user for boilerplate to use\n"
+         f"{fmt_opts}"
+         "* prompt is the default command")
     parser.add_argument('--dry-run', dest='dry_run', action='store_true', help='dry run only')
     parser.add_argument('--real', dest='dry_run', action='store_false', help='real run (opposite of --dry-run)')
     parser.set_defaults(dry_run=False)
