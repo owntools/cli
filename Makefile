@@ -3,6 +3,9 @@ default: run
 run:
 	poetry run python cli.py
 
+help:
+	poetry run python cli.py --help
+
 deps:
 	poetry run pip freeze > requirements.txt
 

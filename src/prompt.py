@@ -1,7 +1,6 @@
 import os
 import questionary as q
-
-from .shell import Shell
+from .util import run_cmd
 
 BOILERPLATE_DIR = os.environ.get('BOILERPLATE_DIR', '/tmp/boilerplate')
 INIT_BOILERPLATE = "INIT_BOILERPLATE"
@@ -10,15 +9,6 @@ NEW_CHALLENGE = "NEW_CHALLENGE"
 APIS = ['express-api', 'flask-api']
 LANGS = ['nodejs', 'python2', 'python3']
 SPAS = ['react-app']
-
-
-def run_cmd(cmd, dry_run=False, **kwargs):
-    if dry_run:
-        return print(cmd)
-
-    sh = Shell(**kwargs)
-    sh.exec(cmd)
-    return sh
 
 
 def get_bp_dirs():
