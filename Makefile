@@ -10,7 +10,7 @@ run:
 	poetry run python cli.py
 
 help:
-	poetry run python cli.py --help
+	poetry run python cli.py help
 
 spike:
 	poetry run python cli.py debug
