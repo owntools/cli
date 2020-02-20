@@ -24,8 +24,7 @@ if __name__ == '__main__':
          "    prompt* = Prompt user for boilerplate to use\n"
          f"{fmt_opts}"
          "* prompt is the default command")
-    parser.add_argument('--dry-run', dest='dry_run', action='store_true', help='dry run only')
-    parser.add_argument('--real', dest='dry_run', action='store_false', help='real run (opposite of --dry-run)')
+    parser.add_argument('-d', '--dry-run', dest='dry_run', action='store_true', help='dry run only')
     parser.set_defaults(dry_run=False)
     args = parser.parse_args()
 
